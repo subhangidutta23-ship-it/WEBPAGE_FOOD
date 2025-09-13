@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Foodie Login & Mood Selector 😋</title>
+    <!-- Load Tailwind CSS for Mood Foodie app -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* --- General Body & Container Styling --- */
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            background-color: #f0f4f8;
+        }
+
+        /* --- Background Animation Styling --- */
+        .background-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        /* Style for each animated food emoji */
+        .food-item {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 40px;
+            opacity: 0;
+            animation: float-up linear infinite;
+        }
+
+        /* Animation keyframes for floating food items */
+        @keyframes float-up {
+            0% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0.5;
+            }
+            100% {
+                transform: translateY(-10vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        /* --- Login Card Styling --- */
+        #login-section {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        .login-card {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(8px);
+            text-align: center;
+            width: 320px;
+            max-width: 90%;
+            transition: all 0.5s ease-in-out;
+        }
+
+        /* Heading style */
+        .login-card h2 {
+            margin-bottom: 25px;
+            color: #333;
+            font-size: 2em;
+        }
+
+        /* Input group layout */
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        /* Label style */
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: bold;
+        }
+
+        /* Input field style */
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            box-sizing: border-box;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #ff6347;
+        }
+
+        /* Submit button style */
+        .submit-btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            background-color: #ff6347;
+            color: white;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        .submit-btn:hover {
+            background-color: #ff4500;
+            transform: translateY(-2px);
+        }
+
+        /* Login success message style */
+        #login-success {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #4CAF50;
+            color: white;
+            padding: 20px 40px;
+            border-radius: 10px;
+            font-size: 1.5em;
+            font-weight: bold;
+            text-align: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.5s ease-in-out, visibility 0.5s ease-in-out;
+            z-index: 100;
+        }
+        #login-success.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* --- Mood Foodie App Styling (from second file) --- */
+        .container {
+            max-width: 1280px;
+        }
+        #mood-foodie-app {
+            display: none; /* Initially hide the app */
+        }
+        #result-card {
+            transition: all 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex flex-col min-h-screen">
+
+    <!-- This is the container for the animated food icons -->
+    <div class="background-animation"></div>
+
+    <!-- The login section -->
+    <div id="login-section">
+        <div class="login-card">
+            <h2>Welcome Foodie!</h2>
+            <form id="login-form" action="#" method="post">
+                <div class="input-group">
+                    <label for="name">Name</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+                <div class="input-group">
+                    <label for="usn">USN</label>
+                    <input type="text" id="usn" name="usn" required>
+                </div>
+                <button type="submit" class="submit-btn">Login</button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Login success message -->
+    <div id="login-success">Login Successful!</div>
+
+    <!-- The Mood Foodie app section (initially hidden) -->
+    <div id="mood-foodie-app" class="flex flex-col flex-grow">
+        <!-- Header -->
+        <header class="bg-white shadow-md py-6">
+            <div class="container mx-auto px-4 text-center">
+                <h1 class="text-4xl font-extrabold text-indigo-700">Mood Foodie</h1>
+                <p class="mt-2 text-gray-600">Find the perfect food for your mood!</p>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="container mx-auto p-8 flex-grow flex flex-col items-center justify-center">
+            <!-- Mood Selector Card -->
+            <div class="bg-white rounded-3xl shadow-xl p-8 w-full max-w-2xl text-center transform transition-transform duration-300 hover:scale-105">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">How are you feeling today?</h2>
+                
+                <div class="relative inline-block w-64">
+                    <select id="mood-select" class="block appearance-none w-full bg-gray-200 border border-gray-300 text-gray-700 py-3 px-4 pr-8 rounded-xl leading-tight focus:outline-none focus:bg-white focus:border-indigo-500 transition-colors duration-200 cursor-pointer">
+                        <option value="" disabled selected>Select a mood...</option>
+                        <option value="happy">Happy</option>
+                        <option value="sad">Sad</option>
+                        <option value="stressed">Stressed</option>
+                        <option value="energetic">Energetic</option>
+                        <option value="cozy">Cozy</option>
+                        <option value="adventurous">Adventurous</option>
+                        <option value="dreamy">Dreamy</option>
+                        <option value="mysterious">Mysterious</option>
+                        <option value="full-moon">Full Moon</option>
+                        <option value="new-moon">New Moon</option>
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                        <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l-.707.707L15 8.707l-.707-.707L10 12.95l-4.293-4.293-.707.707L10 14.364l4.293-4.293z"/></svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Food Suggestion Result Card -->
+            <div id="result-card" class="mt-8 bg-white rounded-3xl shadow-xl p-8 w-full max-w-2xl text-center hidden transform transition-all duration-500 opacity-0">
+                <div class="flex flex-col md:flex-row items-center justify-center space-y-6 md:space-y-0 md:space-x-6">
+                    <!-- Food Image -->
+                    <div class="md:w-1/2 flex items-center justify-center">
+                        <img id="food-image" src="" alt="Suggested food image" class="rounded-2xl shadow-lg w-full h-auto">
+                    </div>
+                    <!-- Food Description -->
+                    <div class="md:w-1/2">
+                        <h3 id="food-title" class="text-3xl font-bold text-indigo-700 mb-4"></h3>
+                        <p id="food-description" class="text-gray-700 text-lg"></p>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="bg-gray-800 text-white py-6 mt-8">
+            <div class="container mx-auto px-4 text-center">
+                <p>&copy; 2025 Mood Foodie. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- Login Logic ---
+            const loginForm = document.getElementById('login-form');
+            const loginSection = document.getElementById('login-section');
+            const moodFoodieApp = document.getElementById('mood-foodie-app');
+            const loginSuccessMsg = document.getElementById('login-success');
+
+            loginForm.addEventListener('submit', (event) => {
+                event.preventDefault(); // Prevent the form from submitting normally
+
+                // Show "Login Successful" message
+                loginSuccessMsg.classList.add('show');
+                
+                // Hide the login section and show the app after a delay
+                setTimeout(() => {
+                    loginSection.style.display = 'none';
+                    loginSuccessMsg.classList.remove('show');
+                    moodFoodieApp.style.display = 'flex';
+                }, 2000);
+            });
+
+            // --- Mood Foodie App Logic ---
+            const moodSelect = document.getElementById('mood-select');
+            const resultCard = document.getElementById('result-card');
+            const foodTitle = document.getElementById('food-title');
+            const foodImage = document.getElementById('food-image');
+            const foodDescription = document.getElementById('food-description');
+
+            const foodData = {
+                happy: [
+                    {
+                        title: "Enjoy a slice of Pizza!",
+                        description: "Nothing says celebration like a warm, cheesy slice of pizza. Share it with friends or savor it all by yourself!",
+                        imageUrl: "https://seoimgak.mmtcdn.com/blog/sites/default/files/images/pizza(1).jpg"
+                    },
+                    {
+                        title: "Grab a scoop of Ice Cream!",
+                        description: "A sweet treat that always brings a smile. The perfect way to celebrate your happy mood.",
+                        imageUrl: "https://static.vecteezy.com/system/resources/previews/046/543/451/non_2x/assorted-ice-cream-scoops-in-bowl-free-png.png"
+                    }
+                ],
+                sad: [
+                    {
+                        title: "Devour a slice of Chocolate Cake",
+                        description: "Rich, decadent chocolate cake is a classic pick-me-up. The sweetness will lift your spirits.",
+                        imageUrl: "https://img.freepik.com/premium-photo/slice-chocolate-cake-with-strawberry-top_865967-18496.jpg"
+                    },
+                    {
+                        title: "Melt away the sadness with Masala Dosa",
+                        description: "A crispy golden crepe hugging a spicy potato mash, a perfect plate of happiness.",
+                        imageUrl: "https://toppng.com/uploads/preview/kerala-food-masala-dosa-11562905349n5ga00chet.png"
+                    }
+                ],
+                stressed: [
+                    {
+                        title: "Relax with a bowl of Soup",
+                        description: "A soothing bowl of soup is the perfect remedy for a stressful day. Warm, nourishing, and easy to enjoy.",
+                        imageUrl: "https://img.freepik.com/free-photo/flat-lay-winter-squash-soup-bowl-held-by-hands-with-spoon-croutons_23-2148706312.jpg?size=626&ext=jpg"
+                    },
+                    {
+                        title: "Sip on a cup of calming Tea",
+                        description: "Take a moment to yourself with a warm cup of herbal tea. Let the aroma and flavor melt your stress away.",
+                        imageUrl: "https://tse1.mm.bing.net/th/id/OIP.r7J70CDfqPw4xyBj1rExzwHaEK?r=0&w=800&h=450&rs=1&pid=ImgDetMain&o=7&rm=3"
+                    }
+                ],
+                energetic: [
+                    {
+                        title: "Power up with a fresh Salad!",
+                        description: "Feeling full of life? A vibrant, crunchy salad will fuel your energy and keep you feeling light and active.",
+                        imageUrl: "https://img.freepik.com/free-photo/fresh-salad-with-chicken-tomatoes-mixed-greens-ai-generated-image_511042-1703.jpg?t=st=1688944420~exp=1688948020~hmac=23b5f30f3f301a91683733ccfb4cfa4ca34e058c9a134545eb553e117fc4a2c3&w=996"
+                    },
+                    {
+                        title: "Fuel up with some Trail Mix",
+                        description: "A handful of nuts and dried fruits will give you the sustained energy you need to keep going.",
+                        imageUrl: "https://www.eatingbirdfood.com/wp-content/uploads/2022/11/superfood-trail-mix-hero.jpg"
+                    }
+                ],
+                cozy: [
+                    {
+                        title: "Curl up with a hot Chocolate",
+                        description: "A cup of creamy hot chocolate is the perfect companion for a quiet, cozy evening indoors. Don't forget the marshmallows!",
+                        imageUrl: "https://herbsandflour.com/wp-content/uploads/2021/12/Homemade-Hot-Chocolate-with-Chocolate-Chips-792x1024.jpg"
+                    },
+                    {
+                        title: "Uncover a pot of rich, aromatic flavor with Biryani.",
+                        description: "A fragrant, spiced rice dish layered with tender meat or vegetables, each spoonful a journey of flavor.",
+                        imageUrl: "https://feeds.abplive.com/onecms/images/uploaded-images/2023/10/11/fa6be68d80b1f9676ece11173a8b6ded1697004727372557_original.jpg"
+                    }
+                ],
+                adventurous: [
+                    {
+                        title: "Try something new like Tacos!",
+                        description: "Spice up your life! Tacos offer a world of flavor combinations for your bold and adventurous spirit.",
+                        imageUrl: "https://tse4.mm.bing.net/th/id/OIP.Kdcfg93JXy4O0lFC4s-AqwHaEh?r=0&rs=1&pid=ImgDetMain&o=7&rm=3"
+                    },
+                    {
+                        title: "Explore the world of Sushi!",
+                        description: "Dive into the art of sushi. Fresh, delicate, and full of surprising flavors.",
+                        imageUrl: "https://tse3.mm.bing.net/th/id/OIP.ONnSUc7dk5cHyCUmISdcFQHaE8?r=0&w=1236&h=824&rs=1&pid=ImgDetMain&o=7&rm=3"
+                    }
+                ],
+                dreamy: [
+                    {
+                        title: "Indulge in a classic Cheeseburger!",
+                        description: "The ultimate feel-good food. Juicy, savory, and satisfying to the last bite.",
+                        imageUrl: "https://www.recipstory.com/wp-content/uploads/2024/10/Classic-Cheeseburger.jpg"
+                    },
+                    {
+                        title: "Get a boost from a tasty Smoothie!",
+                        description: "Packed with fruits and nutrients, a smoothie is a quick and delicious way to keep your energy levels high.",
+                        imageUrl: "https://th.bing.com/th/id/R.0ae4e9ab4ec1ed73fa4f62242814ed08?rik=rHxWruNxDXY%2fhA&riu=http%3a%2f%2ffitlivingeats.com%2fwp-content%2fuploads%2f2016%2f09%2fgreen-smoothies-1.jpg&ehk=%2bW4GXhTtf%2ftrMYB27hb%2bIKoBAmLLHHvehISUW79JqPY%3d&risl=&pid=ImgRaw&r=0"
+                    }
+                ],
+                mysterious: [
+                    {
+                        title: "Unwind with a plate of Noodles",
+                        description: "A comforting bowl of noodles is the ultimate comfort food. Slurp your worries away!",
+                        imageUrl: "https://www.myplantifulcooking.com/wp-content/uploads/2023/03/pyster-sauce-noodles-plate-819x1024.jpg"
+                    },
+                    {
+                        title: "Enjoy a medley of vibrant flavors, all on one plate with South Indian Thali.",
+                        description: "A vibrant spread of flavors that dance on your palate, from tangy to sweet, all on one plate.",
+                        imageUrl: "https://img.freepik.com/premium-photo/traditional-south-indian-meal-food-served-big-banana-leaf-food-platter-complete-thali-selective-focus_466689-50856.jpg?w=2000"
+                    }
+                ],
+                'full-moon': [
+                    {
+                        title: "Comfort yourself with some Mac and Cheese",
+                        description: "Creamy, rich, and undeniably comforting. Mac and cheese is the ultimate bowl of happiness to cheer you up.",
+                        imageUrl: "https://hungryhobby.net/wp-content/uploads/2020/09/square-healthy-homemade-mac-and-cheese-1-1024x1024.jpg"
+                    },
+                    {
+                        title: "Indulge in a delightful, steamed Momo",
+                        description: "A perfect little parcel of joy, steamed to perfection and bursting with flavor.",
+                        imageUrl: "https://i.pinimg.com/736x/3a/e0/ab/3ae0ab70b956c42cf06fa06e14193989.jpg"
+                    }
+                ],
+                'new-moon': [
+                    {
+                        title: "Indulge in a slice of rich, creamy Cheesecake",
+                        description: "A cloud of creamy sweetness that melts in your mouth and leaves you wanting more.",
+                        imageUrl: "https://tse3.mm.bing.net/th/id/OIP.oz2M_JjkaINA-TRaWZUlpwHaE8?r=0&w=2560&h=1707&rs=1&pid=ImgDetMain&o=7&rm=3"
+                    },
+                    {
+                        title: "Savor a perfectly fried, fluffy Vada",
+                        description: "A golden-fried, savory delight that is crispy on the outside and soft on the inside.",
+                        imageUrl: "https://st2.depositphotos.com/5653638/11789/i/950/depositphotos_117893164-stock-photo-south-indian-food-vada-sambar.jpg"
+                    }
+                ]
+            };
+
+            moodSelect.addEventListener('change', (event) => {
+                const selectedMood = event.target.value;
+                if (selectedMood) {
+                    const moodOptions = foodData[selectedMood];
+                    const randomIndex = Math.floor(Math.random() * moodOptions.length);
+                    const food = moodOptions[randomIndex];
+                    
+                    // Update content
+                    foodTitle.textContent = food.title;
+                    foodDescription.textContent = food.description;
+                    foodImage.src = food.imageUrl;
+
+                    // Show the result card with a transition
+                    resultCard.classList.remove('hidden', 'opacity-0');
+                    setTimeout(() => {
+                        resultCard.classList.add('opacity-100');
+                    }, 10);
+                } else {
+                    // Hide the card if no mood is selected
+                    resultCard.classList.remove('opacity-100');
+                    resultCard.classList.add('opacity-0');
+                    setTimeout(() => {
+                        resultCard.classList.add('hidden');
+                    }, 500);
+                }
+            });
+
+            // --- Background Animation Logic ---
+            const foodEmojis = [
+                '🍔', '🍕', '🍩', '🌮', '🍟', '🥗', '🍣', '🍦', '🍜', '🧇', '🥪',
+                '🍎', '🍊', '🍌', '🍇', '🍓', '🍒', '🍍', '🥥', '🥑', '🥦', '🌽', '🥕', '🥔',
+                '🍞', '🥐', '🥖', '🥨', '🧀', '🥚', '🍳', '🥓', '🥩', '🍗', '🍖', '🍤',
+                '🍚', '🍛', '🍝', '🍜', '🍲', '🥘', '🍢', '🍣', '🍙', '🍘', '🍥', '🍡',
+                '🥮', '🥠', '🥟', '🥡', '🦪', '☕', '🍵', '🧉', '🥤', '🍶', '🍾', '🍷'
+            ];
+            const animationContainer = document.querySelector('.background-animation');
+
+            function createFoodItem() {
+                const item = document.createElement('div');
+                item.classList.add('food-item');
+                const randomEmoji = foodEmojis[Math.floor(Math.random() * foodEmojis.length)];
+                item.textContent = randomEmoji;
+                item.style.left = `${Math.random() * 100}vw`;
+                item.style.animationDuration = `${Math.random() * 8 + 5}s`;
+                item.style.animationDelay = `-${Math.random() * 5}s`;
+                animationContainer.appendChild(item);
+
+                item.addEventListener('animationend', () => {
+                    item.remove();
+                });
+            }
+
+            setInterval(createFoodItem, 500);
+        });
+    </script>
+</body>
+</html>
